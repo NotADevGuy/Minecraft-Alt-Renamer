@@ -10,31 +10,6 @@ import easygui
 import os
 
 
-# Do I do array of dictionaries or array of account objects?
-# accountsEx = {  'username':'NotADevGuy', 'password':'pass', 'email':'bob@gmail.com'  }
-# Then do an array of these dicts
-# account
-
-
-# class Account:
-#     # username, password, email, currentSkin = '', '', '', ''
-#     info = {'username': '', 'password': '', 'email': '', 'currentSkin': ''}
-#
-#     def __init__(self, password='', email='', username='', currentSkin=''):
-#         self.info['password'] = password
-#         self.info['email'] = email
-#         self.info['username'] = username
-#         self.info['currentSkin'] = currentSkin
-#         # self.password = str(password)
-#         # self.email = str(email)
-#
-#     # def __del__(self):
-#     #     print("HEY?")
-#
-#     def updateInfo(self, variable, value):
-#         self.info[variable] = value
-
-
 def main():
     accList = []
 
@@ -85,39 +60,47 @@ def main():
                 inc += 1
 
     selService = Service(str(os.getcwd() + "\\chromedriver.exe"))
-    driver = webdriver.Chrome(service=selService)
 
-    driver.get('https://www.minecraft.net/en-us/profile')
+    # Next 3 Lines for headless
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+    driver = webdriver.Chrome(service=selService, options=options)
+
+    # For !headless
+    # driver = webdriver.Chrome(service=selService)
+
     delay = 5
 
-    try:
-        emailInput = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'emailField')))
-        emailInput.click()
-        emailInput.send_keys(Keys.CONTROL, 'a')
-        emailInput.send_keys(accList[0]['email'])
+    for user in accList:
+        try:
+            # TODO figure out why every account has been migrated to microsoft even though they haven't
+            driver.get('https://www.minecraft.net')  # en-us/login or en-us/profile
+            driver.delete_all_cookies()
 
-        passInput = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'password')))
-        passInput.click()
-        passInput.send_keys(Keys.CONTROL, 'a')
-        passInput.send_keys(accList[0]['password'])
+            loginbutton = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.XPATH, "//a[@href='https://www.minecraft.net/en-us/login']")))  # data-bi-name="log in"
+            loginbutton.click()
 
-        time.sleep(1)
-        submitButton = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.XPATH, "//button[text()='Login']")))
-        submitButton.click()
+            emailInput = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'emailField')))
+            emailInput.click()
+            emailInput.send_keys(Keys.CONTROL, 'a')
+            emailInput.send_keys(user['email'])
 
-        userButton = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.XPATH, "//button[contains(@aria-label, 'Change profile name')]")))
-        userButton.click()
-        while True:
-            pass
+            passInput = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'password')))
+            passInput.click()
+            passInput.send_keys(Keys.CONTROL, 'a')
+            passInput.send_keys(user['password'])
 
-        # passInput = driver.find_element(By.ID, 'password')
-    except Exception as e:
-        print("ERROR")
-        print(e)
-    # time.sleep(3)
+            time.sleep(1)
+            submitButton = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.XPATH, "//button[text()='Login']")))
+            submitButton.click()
 
-    # emailInput.click()
-    #
+            userButton = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.XPATH, "//button[contains(@aria-label, 'Change profile name')]")))
+            userButton.click()
+            print(user['email'] + " was successful\n")
+
+        except Exception as e:
+            print(user['email'] + " ERROR")
+            print()
 
 
 def sameChars(s):
